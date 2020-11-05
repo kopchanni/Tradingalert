@@ -1,0 +1,97 @@
+//+------------------------------------------------------------------+
+//|                                              Alert_Prototype.mq4 |
+//|                       Shehryar |
+//|                                             https://www.mql5.com |
+//+------------------------------------------------------------------+
+#property copyright "Shehryar Hassan"
+#property link      "https://www.mql5.com"
+#property version   "1.00"
+#property strict
+#include <functions.mqh>
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+     // RISK MANAGEMENT
+double maxlossprc = 0.02;
+double maxLossInPips = 40;
+
+    Alert("Expert is on");
+   Alert("Volatility and Volume is KEY");
+    ///account details
+   double accbalance = AccountBalance();
+   Alert("");
+   Alert("Account balance is = " + accbalance);
+   
+   double accequity = AccountEquity();
+   Alert("");
+   Alert("Account Equity is = " + accequity);
+   
+   double tickValue = MarketInfo(NULL,MODE_TICKVALUE);
+   Alert("tick value = " + tickValue);
+   Alert("");
+   
+   double maxLossD = accequity * maxlossprc;
+   Alert("MAX YOU SHOULD LOSS IN $$$$ IS " + maxLossD);
+    Alert("");
+   double maxLossInCurrentCurr = maxLossD / tickValue;
+    Alert("IN CURRENT PAIR where $$$$ is not the main currency " + maxLossInCurrentCurr);
+    
+    double minimum_lotsize = MarketInfo(NULL,MODE_MINLOT);
+     Alert("");
+      Alert("Your minimum lotsize is " + minimum_lotsize);
+   //double optimalLotSize = NormalizeDouble(maxLossInCurrentCurr /(maxLossInPips * GetPipValue()),2);
+   // Alert("your optimail lotsize is " + optimalLotSize);
+    
+    EventKillTimer();
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+     Alert("expert is off");
+   //// trading details
+   ///account details
+   double accbalance = AccountBalance();
+   Alert("");
+   Alert("Account balance is = " + accbalance);
+   
+   double accequity = AccountEquity();
+   Alert("");
+   Alert("Account Equity is = " + accequity);
+   
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+   double ownupper = iBands(NULL,PERIOD_M1,20,2.8,0,PRICE_CLOSE,MODE_UPPER,0);
+   double ownlower = iBands(NULL,PERIOD_M1,20,2.8,0,PRICE_CLOSE,MODE_LOWER,0);
+   
+   double ownupper2 = iBands(NULL,PERIOD_M1,50,2.8,0,PRICE_CLOSE,MODE_UPPER,0);
+   double ownlower2 = iBands(NULL,PERIOD_M1,50,2.8,0,PRICE_CLOSE,MODE_LOWER,0);
+//---
+    if(Open[0] || High[0] > ownupper && Open[0] || High[0] > ownupper2)
+      {
+        int orderSellID = OrderSend(NULL,OP_SELL,0.01,Bid,10,cStopLoss(False,Bid,25),ctakeProfit(False,Bid,30),NULL,0002);
+           if(orderSellID < 0)
+         {
+          Alert("ERROR = " + GetLastError());
+         }
+      }else if(Open[0] || Low[0] < ownlower && Open[0] || Low[0] < ownlower2)
+         {
+          int orderbuyID = OrderSend(NULL,OP_BUY,0.01,Ask,10,cStopLoss(True,Ask,25),ctakeProfit(True,Ask,30),NULL,0002);
+       if(orderbuyID < 0)
+         {
+          Alert("ERROR = " + GetLastError());
+         }
+         }
+  }
+//+------------------------------------------------------------------+
